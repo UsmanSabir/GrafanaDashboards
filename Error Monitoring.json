@@ -496,7 +496,7 @@
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
-            "axisPlacement": "auto",
+            "axisPlacement": "left",
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "line",
@@ -509,6 +509,9 @@
             },
             "insertNulls": false,
             "lineInterpolation": "linear",
+            "lineStyle": {
+              "fill": "solid"
+            },
             "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
@@ -516,7 +519,7 @@
             },
             "showPoints": "auto",
             "showValues": false,
-            "spanNulls": false,
+            "spanNulls": 300000,
             "stacking": {
               "group": "A",
               "mode": "none"
@@ -538,14 +541,13 @@
                 "value": 80
               }
             ]
-          },
-          "unit": "reqps"
+          }
         },
         "overrides": []
       },
       "gridPos": {
         "h": 9,
-        "w": 13,
+        "w": 24,
         "x": 0,
         "y": 8
       },
@@ -553,11 +555,11 @@
       "options": {
         "legend": {
           "calcs": [
-            "last",
-            "max"
+            "lastNotNull",
+            "sum"
           ],
           "displayMode": "table",
-          "placement": "bottom",
+          "placement": "right",
           "showLegend": true
         },
         "tooltip": {
@@ -574,7 +576,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by(status_code, app_name, path) (rate(fastapi_responses_total{job=~\"$app_name\", status_code=~\"4..|5..\"}[$__rate_interval]))",
+          "expr": "sum by(status_code, app_name, path) ((fastapi_responses_total{job=~\"$app_name\", status_code=~\"4..|5..\"}))",
           "hide": false,
           "instant": false,
           "legendFormat": "{{status_code}} - {{app_name}} - {{path}}",
@@ -584,133 +586,6 @@
         }
       ],
       "title": "Failed Requests",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "axisSoftMax": 1,
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "showValues": false,
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "area"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 0.1
-              }
-            ]
-          },
-          "unit": "percentunit"
-        },
-        "overrides": [
-          {
-            "__systemRef": "hideSeriesFrom",
-            "matcher": {
-              "id": "byNames",
-              "options": {
-                "mode": "exclude",
-                "names": [
-                  "/user/get-access-token/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJlbWFpbCI6ImJtdy1lMmVAYXBwZXhub3cuY29tIiwidGVuYW50X2lkIjoyLCJ1c2VyX3JvbGVzIjpbeyJyb2xlX2lkIjoxOSwibmFtZSI6IkFkbWluIiwicHJvZHVjdF9pZCI6bnVsbCwicHJvZHVjdF9uYW1lIjpudWxsLCJpc19hZG1pbiI6dHJ1ZSwiZXh0ZXJuYWxfY29kZSI6bnVsbH1dLCJleHAiOjE3NjM1NjA4NDYsImlhdCI6MTc2MzM4ODA0Niwic2Vzc2lvbl9pZCI6IjE5NmM2Njk2LWUxNTItNGIyNS1hMjU3LWEyNDMzMTEwODc4ZCIsInR5cGUiOiJyZWZyZXNoIn0.0QzL6-PVhVL3O33zLS7WJVj2ed-1bWt6oxMwocrRNbw"
-                ],
-                "prefix": "All except:",
-                "readOnly": true
-              }
-            },
-            "properties": [
-              {
-                "id": "custom.hideFrom",
-                "value": {
-                  "legend": false,
-                  "tooltip": true,
-                  "viz": true
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 11,
-        "x": 13,
-        "y": 8
-      },
-      "id": 7,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.2.1+security-01",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum by(path) (fastapi_responses_total{app_name=~\"$app_name\", status_code=~\"5.*\", path!=\"/metrics\"}) / sum by(path) (fastapi_responses_total{app_name=~\"$app_name\", path!=\"/metrics\"})",
-          "interval": "",
-          "legendFormat": "{{path}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Percent of Failed Requests",
       "type": "timeseries"
     },
     {
@@ -856,7 +731,7 @@
       "type": "logs"
     }
   ],
-  "refresh": "",
+  "refresh": "10s",
   "schemaVersion": 42,
   "tags": [],
   "templating": {
@@ -926,7 +801,7 @@
   "timezone": "browser",
   "title": "Error Monitoring",
   "uid": "qfnh7rg",
-  "version": 34,
+  "version": 42,
   "weekStart": "",
   "id": null
 }
