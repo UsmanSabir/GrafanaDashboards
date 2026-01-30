@@ -1,0 +1,94 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+        cors:
+          allowed_origins:
+            - "http://*"
+            - "https://*"
+          allowed_headers: ["*"]
+
+  faro:
+    endpoint: '0.0.0.0:8081'
+    include_metadata: true
+    cors:
+      allowed_origins:
+        - '*'
+      allowed_headers:
+        - 'X-Faro-Session-Id'
+        - 'Content-Type'
+
+#  prometheus/collector:
+#    config:
+#      scrape_configs:
+#        - job_name: "opentelemetry-collector"
+#          scrape_interval: 1s
+#          static_configs:
+#            - targets: ["otelcol:8888"]
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+    path: "/ready"
+
+processors:
+  batch:
+  filter:
+    error_mode: ignore
+    logs:
+      log_record:
+        # The filter processor drops all events signals
+        - 'attributes["kind"] == "event"'
+
+exporters:
+  prometheusremotewrite:
+    endpoint: http://prometheus:9090/api/v1/write
+    tls:
+      insecure: true
+    resource_to_telemetry_conversion:
+      enabled: true
+
+  otlphttp/traces:
+    endpoint: http://tempo:4418
+    tls:
+      insecure: true
+  otlphttp/logs:
+    endpoint: http://loki:3100/otlp
+    tls:
+      insecure: true
+  otlp/profiles:
+    endpoint: http://pyroscope:4040
+    tls:
+      insecure: true
+  debug/metrics:
+    verbosity: detailed
+  debug/traces:
+    verbosity: detailed
+  debug/logs:
+    verbosity: detailed
+
+service:
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [otlp,faro]
+      processors: [batch]
+      exporters: [otlphttp/traces]
+      #exporters: [otlphttp/traces,debug/traces]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheusremotewrite]
+      #exporters: [prometheusremotewrite,debug/metrics]
+    logs:
+      receivers: [otlp,faro]
+      processors: [batch]
+      exporters: [otlphttp/logs]
+      #exporters: [otlphttp/logs,debug/logs]
+    # Profiles pipeline commented out as it requires alpha feature gate
+    # profiles:
+    #   receivers: [otlp]
+    #   exporters: [otlp/profiles]
