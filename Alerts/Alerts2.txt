@@ -1,0 +1,62 @@
+Alerts
+=========
+Gateway Updated Query
+
+sum by (app_name, client, environment, status_code, path) (
+  increase(
+    fastapi_responses_total{
+      client="BMW",
+      environment="prod",
+      app_name="unity-configuration-api",
+      
+      status_code=~"500|502|503|504|400|422|401"
+  }[5m])
+) > 0
+
+
+HTTP {{ $labels.status_code }} error on {{ $labels.app_name}}
+Endpoint error ({{ $labels.status_code }}) detected at path '{{ $labels.path }}' in '{{ $labels.environment }}' environment of {{ $labels.client }}
+
+
+===================
+BMWGatewayError
+increase(
+  fastapi_responses_total{
+    client="BMW",
+    environment="prod",
+    status_code=~"(5..|400)",
+    status_code!~"404"
+  }[1m]
+) > 0
+
+
+
+Input A Is above 0
+
+1m evaluation
+No Data : Normal
+
+Summary
+HTTP {{ $labels.status_code }} error on {{ $labels.app_name}}
+
+Description
+Status error ({{ $labels.status_code }}) detected on {{ $labels.path }} in {{ $labels.environment }} environment of {{ $labels.client }}. Instance is {{ $labels.instance }}
+
+Runbook
+https://bmw-grafana.netsolapp.io/
+
+==============
+GatewayError
+increase(fastapi_responses_total{client="BMW", environment="prod",status_code=~"502|504"}[1m]) > 0
+
+
+HTTP {{ $labels.status_code }} error on {{ $labels.app_name}}
+
+Gateway error ({{ $labels.status_code }}) detected on {{ $labels.path }} in {{ $labels.environment }} environment
+
+https://54.156.154.167/grafana/
+
+
+=====
+
+
