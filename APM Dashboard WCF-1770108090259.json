@@ -17,6 +17,14 @@
       "pluginName": "Tempo"
     },
     {
+      "name": "DS_MSSQL-BUSINESS",
+      "label": "mssql-business",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "mssql",
+      "pluginName": "Microsoft SQL Server"
+    },
+    {
       "name": "DS_LOKI",
       "label": "loki",
       "description": "",
@@ -43,6 +51,12 @@
       "type": "datasource",
       "id": "loki",
       "name": "Loki",
+      "version": "12.3.1"
+    },
+    {
+      "type": "datasource",
+      "id": "mssql",
+      "name": "Microsoft SQL Server",
       "version": "12.3.1"
     },
     {
@@ -1036,7 +1050,7 @@
           "tableType": "traces"
         }
       ],
-      "title": "Top requests by duration",
+      "title": "Top Long-Running Requests",
       "transformations": [
         {
           "id": "sortBy",
@@ -1055,6 +1069,133 @@
     },
     {
       "datasource": {
+        "type": "mssql",
+        "uid": "${DS_MSSQL-BUSINESS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "noValue": "-",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Duration_MS"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 438
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "execution_count"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 128
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 85
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "id": 64,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {
+          "dataset": "SITIA_ASCENT2_BUSINESS",
+          "datasource": {
+            "type": "mssql",
+            "uid": "${DS_MSSQL-BUSINESS}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT TOP 10\r\n    qs.total_elapsed_time / qs.execution_count / 1000.0 AS Duration_MS,\r\n    qs.execution_count As Count,\r\n    SUBSTRING(qt.text, qs.statement_start_offset/2,\r\n              (CASE\r\n                  WHEN qs.statement_end_offset = -1 THEN LEN(CONVERT(NVARCHAR(MAX), qt.text)) * 2\r\n                  ELSE qs.statement_end_offset\r\n               END - qs.statement_start_offset)/2) AS SQL\r\nFROM sys.dm_exec_query_stats qs\r\nCROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) qt\r\nORDER BY Duration_MS DESC;\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "SQL Queries",
+      "type": "table"
+    },
+    {
+      "datasource": {
         "type": "loki",
         "uid": "${DS_LOKI}"
       },
@@ -1062,7 +1203,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 27
+        "y": 35
       },
       "id": 61,
       "options": {
@@ -1196,7 +1337,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 27
+        "y": 35
       },
       "id": 19,
       "options": {
@@ -1309,7 +1450,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 35
+        "y": 43
       },
       "id": 62,
       "options": {
@@ -1318,8 +1459,8 @@
         "showHeader": true,
         "sortBy": [
           {
-            "desc": true,
-            "displayName": "Duration"
+            "desc": false,
+            "displayName": "Name"
           }
         ]
       },
@@ -1348,10 +1489,200 @@
       ],
       "title": "Traces",
       "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "tempo",
+        "uid": "${DS_TEMPO}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "service.name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 114
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Duration"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "gauge",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 143
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "url.path"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 278
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Start time"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 168
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Span ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 162
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Endpoint"
+            },
+            "properties": [
+              {
+                "id": "custom.width"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 51
+      },
+      "id": 65,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "${DS_TEMPO}"
+          },
+          "limit": 100,
+          "metricsQueryType": "range",
+          "query": "{ resource.service.name =~ \"$service\" && resource.deployment.environment=~\"$environment\"} >> { span.url.path != \"\" }  | select(span.url.path, span.id, duration)",
+          "queryType": "traceql",
+          "refId": "A",
+          "serviceMapUseNativeHistograms": false,
+          "spss": 100,
+          "tableType": "spans"
+        }
+      ],
+      "title": "Span Endpoints",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "byVariable": false,
+            "include": {
+              "names": [
+                "Span ID",
+                "Start time",
+                "url.path",
+                "Duration",
+                "service.name"
+              ]
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "service.name": "Service",
+              "url.path": "Endpoint"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": true,
+                "field": "Duration"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
     }
   ],
   "preload": false,
-  "refresh": "auto",
+  "refresh": "1m",
   "schemaVersion": 42,
   "tags": [
     "dotnet"
@@ -1399,14 +1730,14 @@
     ]
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-7d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "APM Dashboard WCF",
   "uid": "KdDACDp4z1apm",
-  "version": 11,
+  "version": 17,
   "weekStart": "",
   "id": null
 }
